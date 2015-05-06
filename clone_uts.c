@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -8,6 +9,10 @@
  
 /* 定义一个给 clone 用的栈，栈大小1M */
 #define STACK_SIZE (1024 * 1024)
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
+                            } while (0)
+
 static char container_stack[STACK_SIZE];
  
 char* const container_args[] = {
@@ -32,6 +37,8 @@ int main()
     int container_pid = clone(container_main, container_stack+STACK_SIZE,
             SIGCHLD | CLONE_NEWUTS, NULL);
     /* 等待子进程结束 */
+    if (container_pid == -1)
+        errExit("clone");
     waitpid(container_pid, NULL, 0);
     printf("Parent - container stopped!\n");
     return 0;
